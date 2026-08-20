@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en" class="is-checking">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="theme-color" content="#faf9f5" />
+    <link rel="icon" href="data:," />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; connect-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-src 'self' blob:; img-src data:; base-uri 'none'; form-action 'none'"
+    />
+    <title>Encrypted site</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #faf9f5;
+        --ink: #1c1c1a;
+        --muted: #74726c;
+        --faint: #dedbd2;
+        --accent: #b85038;
+        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      html.is-checking [data-gate] { visibility: hidden; }
+
+      main {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: auto;
+        place-items: center;
+        padding: 32px;
+      }
+
+      .gate {
+        width: min(100%, 420px);
+        padding: 32px;
+        border: 1px solid var(--faint);
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .kicker {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.7rem, 6vw, 2.25rem);
+        font-weight: 560;
+        letter-spacing: -0.035em;
+      }
+
+      .summary {
+        margin: 14px 0 26px;
+        color: var(--muted);
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.55;
+      }
+
+      .drop-zone {
+        padding: 20px;
+        border: 1px dashed #b9b6ad;
+        background: rgba(255, 255, 255, 0.55);
+        text-align: center;
+        transition: border-color 140ms ease, background 140ms ease;
+      }
+
+      .drop-zone.is-dragging {
+        border-color: var(--accent);
+        background: #f6ebe7;
+      }
+
+      .drop-zone label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.8rem;
+        font-weight: 650;
+      }
+
+      .drop-zone > p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 0.7rem;
+      }
+
+      input[type="file"] {
+        display: block;
+        width: 100%;
+        padding: 9px;
+        border: 1px solid var(--faint);
+        background: white;
+        font: inherit;
+        font-size: 0.72rem;
+      }
+
+      .file-name {
+        display: block;
+        margin-top: 10px;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 0.68rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px 16px;
+        border: 0;
+        color: white;
+        background: var(--ink);
+        font: inherit;
+        font-size: 0.8rem;
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      button:hover:not(:disabled),
+      button:focus-visible:not(:disabled) { background: var(--accent); }
+
+      button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+      output {
+        display: block;
+        min-height: 1.2em;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        line-height: 1.5;
+      }
+
+      output[data-error="true"] { color: #9b3428; }
+
+      .privacy {
+        margin: 20px 0 0;
+        padding-top: 18px;
+        border-top: 1px solid var(--faint);
+        color: var(--muted);
+        font-size: 0.67rem;
+        line-height: 1.55;
+      }
+
+      iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border: 0;
+        background: var(--paper);
+      }
+
+      .forget-credential {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 10;
+        width: auto;
+        margin: 0;
+        padding: 8px 10px;
+        border: 1px solid var(--faint);
+        color: var(--muted);
+        background: rgba(250, 249, 245, 0.92);
+        box-shadow: 0 2px 12px rgba(28, 28, 26, 0.08);
+        font-size: 0.67rem;
+        font-weight: 600;
+        backdrop-filter: blur(8px);
+      }
+
+      .forget-credential:hover:not(:disabled),
+      .forget-credential:focus-visible:not(:disabled) {
+        color: var(--accent);
+        background: var(--paper);
+        border-color: var(--accent);
+      }
+
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main data-gate>
+      <section class="gate" aria-labelledby="unlock-title">
+        <p class="kicker">Encrypted publication</p>
+        <h1 id="unlock-title">Encrypted site</h1>
+        <p class="summary">Select an authorized private key to decrypt this site in your browser.</p>
+
+        <div class="drop-zone" data-drop-zone>
+          <label for="private-key">Drop a private key here</label>
+          <p>or choose a PEM file from this device</p>
+          <input id="private-key" type="file" accept=".pem,application/x-pem-file,text/plain" />
+          <span class="file-name" data-file-name>No file selected</span>
+        </div>
+        <button type="button" data-unlock disabled>Decrypt and open</button>
+        <output data-status aria-live="polite">Checking this browser for a saved key…</output>
+
+        <p class="privacy">
+          The key stays on this device. It is saved as a non-extractable browser key for future visits.
+        </p>
+      </section>
+    </main>
+
+    <iframe
+      data-site
+      aria-label="Decrypted site"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+      hidden
+    ></iframe>
+
+    <button class="forget-credential" type="button" data-forget-credential hidden>
+      Remove saved credential
+    </button>
+
+    <script>
+      (() => {
+        const gate = document.querySelector("[data-gate]");
+        const dropZone = document.querySelector("[data-drop-zone]");
+        const fileInput = document.querySelector("#private-key");
+        const fileName = document.querySelector("[data-file-name]");
+        const unlockButton = document.querySelector("[data-unlock]");
+        const status = document.querySelector("[data-status]");
+        const frame = document.querySelector("[data-site]");
+        const forgetCredentialButton = document.querySelector("[data-forget-credential]");
+        const databaseName = "encrypted-site-key-store";
+        const storeName = "credentials";
+        const savedKeyId = "reader-private-key";
+        const protocolVersion = 2;
+        const manifestMagic = [0x45, 0x50, 0x4d, protocolVersion];
+        const routeMagic = [0x45, 0x50, 0x52, protocolVersion];
+        const manifestInfo = "encrypted-publication:manifest:v2";
+        const textEncoder = new TextEncoder();
+        let selectedFile = null;
+        let site = null;
+        let manifestEnvelopePromise = null;
+        let renderSequence = 0;
+        const routePromises = new Map();
+
+        const fromBase64 = (value) => {
+          const binary = atob(value);
+          return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+        };
+
+        const joinBytes = (...arrays) => {
+          const output = new Uint8Array(arrays.reduce((length, value) => length + value.length, 0));
+          let offset = 0;
+          arrays.forEach((value) => {
+            output.set(value, offset);
+            offset += value.length;
+          });
+          return output;
+        };
+
+        const useKeyStore = (mode, operation) => new Promise((resolve, reject) => {
+          if (!("indexedDB" in window)) {
+            reject(new Error("Persistent browser storage is unavailable."));
+            return;
+          }
+
+          const openRequest = indexedDB.open(databaseName, 1);
+          openRequest.onupgradeneeded = () => {
+            const database = openRequest.result;
+            if (!database.objectStoreNames.contains(storeName)) database.createObjectStore(storeName);
+          };
+          openRequest.onerror = () => reject(openRequest.error);
+          openRequest.onblocked = () => reject(new Error("Persistent browser storage is blocked."));
+          openRequest.onsuccess = () => {
+            const database = openRequest.result;
+            const transaction = database.transaction(storeName, mode);
+            let request;
+
+            try {
+              request = operation(transaction.objectStore(storeName));
+            } catch (error) {
+              database.close();
+              reject(error);
+              return;
+            }
+
+            transaction.oncomplete = () => {
+              const result = request.result;
+              database.close();
+              resolve(result);
+            };
+            transaction.onerror = () => {
+              database.close();
+              reject(transaction.error || request.error);
+            };
+            transaction.onabort = () => {
+              database.close();
+              reject(transaction.error || new Error("Browser storage transaction was aborted."));
+            };
+          };
+        });
+
+        const loadSavedKey = () => useKeyStore("readonly", (store) => store.get(savedKeyId));
+        const saveKey = (privateKey) => useKeyStore("readwrite", (store) => store.put(privateKey, savedKeyId));
+        const forgetSavedKey = () => useKeyStore("readwrite", (store) => store.delete(savedKeyId));
+
+        const privateKeyBytes = (pem) => {
+          if (!pem.includes("-----BEGIN PRIVATE KEY-----")) {
+            throw new Error("Use an unencrypted PKCS#8 private key in PEM format.");
+          }
+          const body = pem
+            .replace("-----BEGIN PRIVATE KEY-----", "")
+            .replace("-----END PRIVATE KEY-----", "")
+            .replace(/\s/g, "");
+          return fromBase64(body);
+        };
+
+        const hasMagic = (bytes, expected) => expected.every((value, index) => bytes[index] === value);
+
+        const parseManifestEnvelope = (bytes) => {
+          if (bytes.byteLength <= 66 || !hasMagic(bytes, manifestMagic)) {
+            throw new Error("The encrypted manifest format is invalid.");
+          }
+          const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          const wrappedKeyLength = view.getUint16(4, false);
+          const ciphertextOffset = 66 + wrappedKeyLength;
+          if (!wrappedKeyLength || ciphertextOffset >= bytes.byteLength) {
+            throw new Error("The encrypted manifest key envelope is invalid.");
+          }
+          return {
+            kdfSalt: bytes.slice(6, 38),
+            iv: bytes.slice(38, 50),
+            authTag: bytes.slice(50, 66),
+            wrappedKey: bytes.slice(66, ciphertextOffset),
+            ciphertext: bytes.slice(ciphertextOffset),
+          };
+        };
+
+        const parseRouteEnvelope = (bytes) => {
+          if (bytes.byteLength <= 32 || !hasMagic(bytes, routeMagic)) {
+            throw new Error("The encrypted route format is invalid.");
+          }
+          return {
+            iv: bytes.slice(4, 16),
+            authTag: bytes.slice(16, 32),
+            ciphertext: bytes.slice(32),
+          };
+        };
+
+        const fetchBytes = async (url, cache) => {
+          const response = await fetch(url, { cache });
+          if (!response.ok) throw new Error("An encrypted site resource could not be downloaded.");
+          return new Uint8Array(await response.arrayBuffer());
+        };
+
+        const loadManifestEnvelope = () => {
+          if (!manifestEnvelopePromise) {
+            manifestEnvelopePromise = fetchBytes("./manifest.enc", "no-store")
+              .then(parseManifestEnvelope)
+              .catch((error) => {
+                manifestEnvelopePromise = null;
+                throw error;
+              });
+          }
+          return manifestEnvelopePromise;
+        };
+
+        const deriveContentKey = (rootKey, kdfSalt, info) => crypto.subtle.deriveKey(
+          {
+            name: "HKDF",
+            hash: "SHA-256",
+            salt: kdfSalt,
+            info: textEncoder.encode(info),
+          },
+          rootKey,
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["decrypt"]
+        );
+
+        const decryptPayload = async (envelope, key, additionalData) => new Uint8Array(
+          await crypto.subtle.decrypt(
+            {
+              name: "AES-GCM",
+              iv: envelope.iv,
+              additionalData: textEncoder.encode(additionalData),
+              tagLength: 128,
+            },
+            key,
+            joinBytes(envelope.ciphertext, envelope.authTag)
+          )
+        );
+
+        const unpackPayload = async (packed) => {
+          if (!("DecompressionStream" in window)) {
+            throw new Error("This browser cannot decompress the encrypted site.");
+          }
+          if (packed.byteLength < 4) throw new Error("The encrypted payload is truncated.");
+          const view = new DataView(packed.buffer, packed.byteOffset, packed.byteLength);
+          const compressedLength = view.getUint32(0, false);
+          if (!compressedLength || 4 + compressedLength > packed.byteLength) {
+            throw new Error("The encrypted payload length is invalid.");
+          }
+          const compressed = packed.slice(4, 4 + compressedLength);
+          const stream = new Response(compressed).body.pipeThrough(new DecompressionStream("gzip"));
+          return new TextDecoder().decode(await new Response(stream).arrayBuffer());
+        };
+
+        const invalidCredential = () => {
+          const error = new Error("This private key is not authorized for this site.");
+          error.name = "CredentialError";
+          return error;
+        };
+
+        const validateManifest = (manifest) => {
+          const validChunkId = (value) => typeof value === "string" && /^[a-f0-9]{36}$/.test(value);
+          const validRoute = (value) => typeof value === "string"
+            && value.startsWith("/")
+            && (value === "/" || value.endsWith("/"))
+            && !value.includes("..")
+            && !value.includes("?")
+            && !value.includes("#");
+          if (
+            !manifest
+            || manifest.version !== protocolVersion
+            || typeof manifest.title !== "string"
+            || !validRoute(manifest.defaultRoute)
+            || !manifest.routes
+            || typeof manifest.routes !== "object"
+            || !validChunkId(manifest.notFound)
+          ) {
+            throw new Error("The decrypted manifest is invalid.");
+          }
+          const entries = Object.entries(manifest.routes);
+          if (
+            !entries.length
+            || !entries.every(([route, chunkId]) => validRoute(route) && validChunkId(chunkId))
+            || !manifest.routes[manifest.defaultRoute]
+          ) {
+            throw new Error("The decrypted route map is invalid.");
+          }
+        };
+
+        const decryptManifest = async (privateKey) => {
+          const envelope = await loadManifestEnvelope();
+          let rootSecret;
+          try {
+            rootSecret = new Uint8Array(await crypto.subtle.decrypt(
+              { name: "RSA-OAEP" },
+              privateKey,
+              envelope.wrappedKey
+            ));
+          } catch (_) {
+            throw invalidCredential();
+          }
+
+          let rootKey;
+          try {
+            rootKey = await crypto.subtle.importKey(
+              "raw",
+              rootSecret,
+              "HKDF",
+              false,
+              ["deriveKey"]
+            );
+          } finally {
+            rootSecret.fill(0);
+          }
+
+          const manifestKey = await deriveContentKey(rootKey, envelope.kdfSalt, manifestInfo);
+          const plaintext = await unpackPayload(
+            await decryptPayload(envelope, manifestKey, manifestInfo)
+          );
+          const manifest = JSON.parse(plaintext);
+          validateManifest(manifest);
+          return { manifest, rootKey, kdfSalt: envelope.kdfSalt };
+        };
+
+        const routeFromHash = () => {
+          if (!location.hash.startsWith("#/")) return site.manifest.defaultRoute;
+          let route = location.hash.slice(1).split("?")[0];
+          try { route = decodeURIComponent(route); } catch (_) { return site.manifest.defaultRoute; }
+          if (!route.startsWith("/") || route.includes("..")) return site.manifest.defaultRoute;
+          if (route !== "/" && !route.endsWith("/")) route += "/";
+          return route;
+        };
+
+        const loadRoute = (route) => {
+          const chunkId = site.manifest.routes[route] || site.manifest.notFound;
+          if (!routePromises.has(chunkId)) {
+            const promise = (async () => {
+              const info = `encrypted-publication:route:v2:${chunkId}`;
+              const envelope = parseRouteEnvelope(
+                await fetchBytes(`./content/${chunkId}.enc`, "force-cache")
+              );
+              const routeKey = await deriveContentKey(site.rootKey, site.kdfSalt, info);
+              return unpackPayload(await decryptPayload(envelope, routeKey, info));
+            })().catch((error) => {
+              routePromises.delete(chunkId);
+              throw error;
+            });
+            routePromises.set(chunkId, promise);
+          }
+          return routePromises.get(chunkId);
+        };
+
+        const renderRoute = async ({ initial = false } = {}) => {
+          if (!site) return;
+          const sequence = ++renderSequence;
+          const route = routeFromHash();
+          try {
+            const html = await loadRoute(route);
+            if (sequence !== renderSequence) return;
+            frame.srcdoc = html;
+          } catch (error) {
+            console.error("The encrypted route could not be opened.", error);
+            if (initial) throw error;
+          }
+        };
+
+        const revealGate = () => document.documentElement.classList.remove("is-checking");
+
+        const prepareSite = async (privateKey) => {
+          const decryptedSite = await decryptManifest(privateKey);
+          site = decryptedSite;
+          routePromises.clear();
+          document.title = site.manifest.title;
+          try {
+            await renderRoute({ initial: true });
+          } catch (error) {
+            site = null;
+            routePromises.clear();
+            throw error;
+          }
+        };
+
+        const showSite = (hasSavedCredential = false) => {
+          gate.hidden = true;
+          frame.hidden = false;
+          forgetCredentialButton.hidden = !hasSavedCredential;
+          revealGate();
+        };
+
+        const setStatus = (message, error = false) => {
+          status.textContent = message;
+          status.dataset.error = String(error);
+        };
+
+        const selectFile = (file) => {
+          if (!file) {
+            selectedFile = null;
+            fileName.textContent = "No file selected";
+            unlockButton.disabled = true;
+            setStatus("Waiting for a private key.");
+            return;
+          }
+          if (file.size > 64 * 1024) {
+            selectedFile = null;
+            fileName.textContent = "No file selected";
+            unlockButton.disabled = true;
+            setStatus("The selected key file is unexpectedly large.", true);
+            return;
+          }
+
+          selectedFile = file;
+          fileName.textContent = file.name || "Dropped private key";
+          unlockButton.disabled = false;
+          setStatus("Key selected. Ready to decrypt.");
+        };
+
+        fileInput.addEventListener("change", () => selectFile(fileInput.files[0]));
+
+        window.addEventListener("dragover", (event) => event.preventDefault());
+        window.addEventListener("drop", (event) => event.preventDefault());
+        dropZone.addEventListener("dragenter", (event) => {
+          event.preventDefault();
+          dropZone.classList.add("is-dragging");
+        });
+        dropZone.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "copy";
+          dropZone.classList.add("is-dragging");
+        });
+        dropZone.addEventListener("dragleave", (event) => {
+          if (!dropZone.contains(event.relatedTarget)) dropZone.classList.remove("is-dragging");
+        });
+        dropZone.addEventListener("drop", (event) => {
+          event.preventDefault();
+          dropZone.classList.remove("is-dragging");
+          if (event.dataTransfer.files.length !== 1) {
+            setStatus("Drop exactly one private-key file.", true);
+            return;
+          }
+          selectFile(event.dataTransfer.files[0]);
+        });
+
+        unlockButton.addEventListener("click", async () => {
+          if (!selectedFile) return;
+          unlockButton.disabled = true;
+          setStatus("Decrypting locally…");
+
+          try {
+            const pem = await selectedFile.text();
+            const privateKey = await crypto.subtle.importKey(
+              "pkcs8",
+              privateKeyBytes(pem),
+              { name: "RSA-OAEP", hash: "SHA-256" },
+              false,
+              ["decrypt"]
+            );
+            await prepareSite(privateKey);
+
+            let savedCredential = false;
+            try {
+              await saveKey(privateKey);
+              savedCredential = true;
+            } catch (storageError) {
+              console.warn("The key could not be persisted in this browser.", storageError);
+            }
+
+            selectedFile = null;
+            fileInput.value = "";
+            showSite(savedCredential);
+          } catch (error) {
+            console.error(error);
+            unlockButton.disabled = false;
+            setStatus(error.message || "Decryption failed. Check the private key and try again.", true);
+          }
+        });
+
+        const openWithSavedKey = async () => {
+          let savedKey;
+          try {
+            savedKey = await loadSavedKey();
+          } catch (storageError) {
+            console.warn("Persistent browser storage is unavailable.", storageError);
+            setStatus("Waiting for a private key. This browser cannot remember it between visits.");
+            revealGate();
+            return;
+          }
+
+          if (!savedKey) {
+            setStatus("Waiting for a private key.");
+            revealGate();
+            return;
+          }
+
+          setStatus("Opening with the saved key…");
+          try {
+            await prepareSite(savedKey);
+            showSite(true);
+          } catch (error) {
+            console.warn("The encrypted site could not be opened with the saved credential.", error);
+            if (error.name === "CredentialError") {
+              try { await forgetSavedKey(); } catch (storageError) { console.warn(storageError); }
+              setStatus("The saved key no longer unlocks this site. Select a new key.", true);
+            } else {
+              setStatus(error.message || "The encrypted site could not be opened. Refresh to try again.", true);
+            }
+            revealGate();
+          }
+        };
+
+        forgetCredentialButton.addEventListener("click", async () => {
+          if (!window.confirm("Remove the saved private key from this browser?")) return;
+
+          forgetCredentialButton.disabled = true;
+          try {
+            await forgetSavedKey();
+            location.reload();
+          } catch (error) {
+            console.error("The saved credential could not be removed.", error);
+            forgetCredentialButton.disabled = false;
+            forgetCredentialButton.textContent = "Could not remove credential";
+            window.setTimeout(() => {
+              forgetCredentialButton.textContent = "Remove saved credential";
+            }, 2400);
+          }
+        });
+
+        window.addEventListener("hashchange", () => void renderRoute());
+        window.addEventListener("message", (event) => {
+          if (!site || event.source !== frame.contentWindow) return;
+          if (!event.data || event.data.type !== "encrypted-site:navigate") return;
+          const route = String(event.data.route || "/");
+          const nextHash = `#${route.startsWith("/") ? route : `/${route}`}`;
+          if (location.hash === nextHash) void renderRoute();
+          else location.hash = nextHash;
+        });
+
+        openWithSavedKey();
+      })();
+    </script>
+  </body>
+</html>
